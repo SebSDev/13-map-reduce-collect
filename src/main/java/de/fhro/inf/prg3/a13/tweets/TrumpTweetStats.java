@@ -3,32 +3,67 @@ package de.fhro.inf.prg3.a13.tweets;
 import de.fhro.inf.prg3.a13.model.Tweet;
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * @author Peter Kurfer
  */
-public class TrumpTweetStats {
+public class TrumpTweetStats
+{
+    public static Map<String, Long> calculateSourceAppStats(Stream<Tweet> tweetStream)
+    {
+        // counting the Tweets by source app
+        Map<String, Long> map = tweetStream
+                .collect(Collectors.groupingBy(Tweet::getSourceApp, Collectors.counting()));
 
-    public static Map<String, Long> calculateSourceAppStats(Stream<Tweet> tweetStream) {
-        /* TODO group the tweets by the `sourceApp` they were created with and count how many it were per `sourceApp` */
-        throw new NotImplementedException("TrumpTweetStats.calculateSourceAppStats(...) not implemented yet.");
+        return map;
     }
 
-    public static Map<String, Set<Tweet>> calculateTweetsBySourceApp(Stream<Tweet> tweetStream) {
-        /* TODO group the tweets by the `sourceApp`
-         * collect the tweets in `Set`s for each source app */
-        throw new NotImplementedException("TrumpTweetStats.calculateTweetsBySourceApp(...) not implemented yet.");
+    public static Map<String, Set<Tweet>> calculateTweetsBySourceApp(Stream<Tweet> tweetStream)
+    {
+        // collecting the tweets in `Set`s for each source app
+        Map<String, Set<Tweet>> map = tweetStream
+                .collect(Collectors.groupingBy(Tweet::getSourceApp, Collectors.toSet()));
+
+        return map;
     }
 
-    public static Map<String, Integer> calculateWordCount(Stream<Tweet> tweetStream, List<String> stopWords) {
-        /* Remark: implement this method at last */
-        /* TODO split the tweets, lower them, trim them, remove all words that are in the `stopWords`,
-         * reduce the result to a Map<String, Integer> to count how often each word were in the tweets
-         * optionally you could filter for all words that were used more than 10 times */
-        throw new NotImplementedException("TrumpTweetStats.tweetStream(...) not implemented yet.");
+    public static Map<String, Integer> calculateWordCount(Stream<Tweet> tweetStream, List<String> stopWords)
+    {
+        Stream<String[]> words = tweetStream
+                // splitting all the string at the whitespaces
+                .map(t -> t.getText().toLowerCase().split("( )+"))
+                // removing whitespaces from the words
+                .map(w -> {
+                    for (int i = 0; i < w.length; i++)
+                        w[i] = w[i].trim();
+                    return w;
+                });
+
+        Stream<String> stringStream = words
+                .flatMap(w -> Arrays.stream(w))
+                // filter out the stopwords
+                .filter(w -> {
+                    for(String sw : stopWords)
+                    {
+                        if (w.contains(sw))
+                            return false;
+                    }
+                    return true;
+                });
+
+        HashMap<String, Integer> id = new HashMap<>();
+
+        Map<String, Integer> map = stringStream
+                .reduce(id, (bi, i) -> {
+                    Integer val = bi.get(i);
+                    val++;
+                    bi.put(i, val);
+                    return bi;
+                }, null); // maybe "null" has to be "(m1, m2) -> m1"
+
+        return map;
     }
 }
