@@ -45,23 +45,23 @@ public class TrumpTweetStats
         Stream<String> stringStream = words
                 .flatMap(w -> Arrays.stream(w))
                 // filter out the stopwords
-                .filter(w -> {
-                    for(String sw : stopWords)
-                    {
-                        if (w.contains(sw))
-                            return false;
-                    }
-                    return true;
-                });
+                .filter(w -> !stopWords.contains(w)
+                );
 
         HashMap<String, Integer> id = new HashMap<>();
 
         Map<String, Integer> map = stringStream
-                .reduce(id, (bi, i) -> {
-                    Integer val = bi.get(i);
+                .reduce(id, (mp, i) -> {
+                    Integer val;
+                    try {
+                        val = mp.get(i);
+                    }
+                    catch (Exception e) {
+                        val = 0;
+                    }
                     val++;
-                    bi.put(i, val);
-                    return bi;
+                    mp.put(i, val);
+                    return mp;
                 }, null); // maybe "null" has to be "(m1, m2) -> m1"
 
         return map;
